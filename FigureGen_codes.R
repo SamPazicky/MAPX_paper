@@ -180,8 +180,6 @@ GS <- rbind(GSpos,GSneg)
 fwrite(GS,"GS.csv")
 
 
-reps <- c("0","1","2")
-timepoints <- paste0("tp",c(4,10,16,22,28,34,40))
 all.predictors <- readRDS("all.predictors.RDS")
 all.features <- readRDS("all.features.RDS")
 all.fitdata <- readRDS("all.fitdata.RDS")
@@ -233,6 +231,7 @@ for(tp in timepoints) {
 
 # For each timepoint and replicate, there are three different composite models. Precision-recall curves should be checked
 # which models will be used in the next step for model averaging.
+# An example file (model_choice.csv") is included in the github repository.
 
 ### Averaging predictions across replicates
 
@@ -346,14 +345,20 @@ design=list('setNodeShapeDefault("ELLIPSE")',
 
 #final data here refers to the final_networks network with a selected cutoff.
 # Fig1H #Fig2a #Fig2b #Fig2c
-X.plot.network(final_data,scores.col="score",standard.set=GS,labels.col="complex",annotation=MAPX::plasmoDB_data%>%rename(protein=Accession), 
-               design.params=design, network.name="MAPX_network", cytoscape.path="C://Program Files/Cytoscape_v3.9.1/Cytoscape.exe")
+final_networks <- list.files("final_choices",full.names=TRUE)
+for(fn in final_networks) {
+  plotname = str_remove(fn,".csv")
+  networkfile <- fread(fn)
+  X.plot.network(networkfile,scores.col="pred",standard.set=GS,labels.col="complex",annotation=MAPX::plasmoDB_data%>%dplyr::rename(protein=Accession), 
+                 design.params=design, network.name="MAPX_network", cytoscape.path="C://Program Files/Cytoscape_v3.9.1/Cytoscape.exe")
+}
+
 
 
 # For local subnetworks, calibrated scores are typically used that approximate the probabilities
 all.predictions.cal <- list()
 for(tp in timepoints) {
-  all.predictions.cal <- all.predictions[[tp]] %>%
+  all.predictions.cal[[tp]] <- all.predictions[[tp]] %>%
     X.calibrate.scores(GS)
 }
 
@@ -363,8 +368,12 @@ all.predictions.cal <- all.predictions.cal %>%
   relocate(timepoint, .after=last_col())
 fwrite(all.predictions.cal,"all.predictions.cal.csv")
 
+all.predictions <- all.predictions %>%
+  bindlist(idcol="timepoint") %>%
+  relocate(timepoint, .after=last_col())
+
 #Calculation of local subnetwork of a protein of interest
-#Fig3B #Fig3C #Fig3D #Fig3E #Fig3F #Fig3G #Fig2I #Fig3K
+#Fig3B #Fig3C #Fig3D #Fig3E #Fig3F #Fig3G #Fig2I #Fig3K (replace 'PF3D7_0412200' with the protein of interest)
 local.subnetwork <- X.local.network(all.predictions.cal%>%dplyr::select(!score),"PF3D7_0412200", plot="cytoscape",
                                    plot.annotation=plasmoDB_data%>%rename(protein=Accession),
                                    plot.cytoscape.path="C://Program Files/Cytoscape_v3.9.1/Cytoscape.exe")
@@ -416,7 +425,7 @@ for(cpx in names(data.AIs$plots)) {
   ggsave(paste0("aveplots/",cpx,".png", data.AIs$plots[[cpx]]))
 }
 
-# this table is available on 
+# this table is available in the github repository
 ctfu <- fread("complexes_table_filledup.csv")
 
 #Fig4B follows
@@ -455,19 +464,6 @@ ggsave(paste0("tileplot_z_averaged_centered.svg"),plot,height=8,width=6,units="c
 
 ### Related to #Fig5 - moonlighting
 
-library(data.table)
-library(tidyverse)
-library(MAPX)
-library(useful)
-
-resources <- "D:/OneDrive - Nanyang Technological University/Documents/Resources/"
-source(paste0(resources,"/R_design_settings.R"))
-source(paste0(resources,"/R_functions_simples.R"))
-source(paste0(resources,"/X.dynamics.sankey.R"))
-#######################
-#######################
-############## Resources
-
 my.rainbow <- c("red2","orange","yellow1","green3","cyan3","blue1","purple3")
 
 table1_complexes <- MAPX::complexes[c("ribosome_full",  "IF2","IF3","EF1", "MSC_M","MSC_Q", "E2_enzyme", "apicoplast_ribosome", "SSU_UtpB", #protein turnover
@@ -487,7 +483,7 @@ table1_complexes <- MAPX::complexes[c("ribosome_full",  "IF2","IF3","EF1", "MSC_
 
 
 
-mapx_mls <- X.predict.moonlighters(data=PCAresult$data,complexes=table1_complexes,min.reps=2,min.conditions=2,weights=PCAresult$var.explained,
+mapx_mls <- X.predict.moonlighters(data=data.PCAs$data,complexes=table1_complexes,min.reps=2,min.conditions=2,weights=data.PCAs$var.explained,
                                    kmeans.maxiter=100,kmeans.nstart=100, plot=TRUE)
 #Fig5B
 for(cpx in names(mapx_mls$PCA.plots)) {
@@ -498,8 +494,7 @@ for(cpx in names(mapx_mls$PCA.plots)) {
   }
 }
 
-
-S4_table <- mapx_mls$moonlighters %>%
+S3_table <- mapx_mls$moonlighters %>%
   dplyr::select(complex,protein,condition,w.sig) %>%
   group_by(complex,protein) %>%
   summarise(Condition=paste(condition,collapse=", "), Significance=paste(w.sig,collapse=", ")) %>%
@@ -509,7 +504,7 @@ S4_table <- mapx_mls$moonlighters %>%
   left_join(MAPX::plasmoDB_data%>%dplyr::select(Accession,Product.Description) %>%setNames(c("Protein","Protein name"))) %>%
   dplyr::select(starts_with("Complex"),starts_with("Protein"),starts_with("Timepoint"),Significance)
 #DataS3
-fwrite(S4_table,"DataS3_moonlighters.csv")
+fwrite(S3_table,"DataS3_moonlighters.csv")
 
 moonlighting_proteins_plot <- mapx_mls$moonlighters %>%
   # left_join(mapx_mls$data%>%dplyr::select(complex,protein,condition,),by=c("complex","protein","condition")) %>%
@@ -544,7 +539,6 @@ mapx_mls$moonlighters$complex %>% unique() %>% length()
 mapx_mls$moonlighters$protein %>% unique() %>% length()
 moonlighting_legend <- get_legend(moonlighting_proteins_plot)
 
-
 pdf("moonlighting_legend_alt.pdf")
 plot(moonlighting_legend)
 dev.off()
@@ -556,10 +550,9 @@ for(cpx in names(table1_complexes)) {
   
   cpxn <- ctfu %>% filter(Complex==cpx) %>% pull(`Complex name`) %>% unique
   plotdata <- mapx_mls$data %>%
-    mutate(condition=as.numeric(condition)) %>%
     dplyr::select(complex,protein,condition,cluster,replicate) %>%
-    left_join(PCAresult$data%>%dplyr::select(protein,condition,replicate,PC1,PC2)%>%mutate(condition=as.numeric(condition)),by=c("protein","condition","replicate")) %>%
-    mutate(condition=factor(condition,levels=as.numeric(str_remove(timepoints,"tp")))) %>%
+    left_join(data.PCAs$data%>%dplyr::select(protein,condition,replicate,PC1,PC2),by=c("protein","condition","replicate")) %>%
+    mutate(condition=factor(condition,levels=timepoints)) %>%
     mutate(replicate=as.character(as.numeric(replicate))) %>%
     filter(complex==cpx) %>%
     # filter(condition==tp) %>%
@@ -638,8 +631,8 @@ plot <- tofitdata %>%
 plot
 
 #Fig1B
-ggsave("Fig1/3protein_example.png",plot,width=6,height=6,units="cm")
-ggsave("Fig1/3protein_example.svg",plot,width=6,height=6,units="cm")
+ggsave("Fig/3protein_example.png",plot,width=6,height=6,units="cm")
+ggsave("Fig/3protein_example.svg",plot,width=6,height=6,units="cm")
 
 
 #Fig1C follows:
@@ -674,7 +667,7 @@ prot3_boxplots_plot <- prot3_boxplots_data %>%
         legend.position="none") +
   scale_x_discrete(breaks=c(0,1),labels=c("-","+"))
 #Fig1C
-ggsave("Fig1/3protein_example_predictors.png",units="cm",height=7,width=13)
+ggsave("Fig/3protein_example_predictors.png",units="cm",height=7,width=13)
 
 
 
@@ -752,7 +745,7 @@ nowplots <- lapply(all.stats,
                      ))
 #Fig1G
 for(tp in timepoints) {
-  ggsave(paste0("Fig1/all.stats_tp",tp,".png"),nowplots[[as.character(tp)]], units="cm",height=9, width=9)
+  ggsave(paste0("Fig/all.stats_tp",tp,".png"),nowplots[[as.character(tp)]], units="cm",height=9, width=9)
 }
 
 
@@ -760,9 +753,9 @@ dir.create("Fig")
 #Fig4A below:
 # explanatory for timepoint analysis
 
-plot <- PCAresult$data %>% 
-  filter(sample=="34;_;2") %>%
-  mutate(complex=ifelse(protein %in% complexes$T_complex,"YES","NO")) %>%
+plot <- data.PCAs$data %>% 
+  filter(sample=="tp34;_;2") %>%
+  mutate(complex=ifelse(protein %in% MAPX::complexes$T_complex,"YES","NO")) %>%
   arrange(complex) %>%
   ggplot(aes(x=PC1, y=PC2)) +
   geom_point(aes(color=complex,size=complex,alpha=complex)) +
@@ -770,8 +763,8 @@ plot <- PCAresult$data %>%
   scale_alpha_manual(values=c(0.5,1)) +
   scale_color_manual(values=c("Gray80","red")) +
   customPlot +
-  scale_x_continuous(limits=c(-2.5,2.5), name=paste0("PC1 (explains ",PCAresult$var.explained[1],"% of variation)")) +
-  scale_y_continuous(limits=c(-2.5,2.5), name=paste0("PC2 (explains ",PCAresult$var.explained[2],"% of variation)")) +
+  scale_x_continuous(limits=c(-2.5,2.5), name=paste0("PC1 (explains ",data.PCAs$var.explained[1],"% of variation)")) +
+  scale_y_continuous(limits=c(-2.5,2.5), name=paste0("PC2 (explains ",data.PCAs$var.explained[2],"% of variation)")) +
   theme(legend.position="none")
 ggsave("Fig/PCA_plot_Tcomplex_rep3_34hpi.png", plot, units="cm",height=8,width=8)
 ggsave("Fig/PCA_plot_Tcomplex_rep3_34hpi.svg", plot, units="cm",height=8,width=8)
@@ -781,7 +774,7 @@ ggsave("Fig/PCA_plot_Tcomplex_rep3_34hpi.svg", plot, units="cm",height=8,width=8
 plot <- all.features.data %>%
   filter(condition=="tp34") %>%
   filter(replicate=="2") %>%
-  mutate(complex=ifelse(protein %in% complexes$T_complex,"YES","NO")) %>%
+  mutate(complex=ifelse(protein %in% MAPX::complexes$T_complex,"YES","NO")) %>%
   arrange(complex) %>%
   dplyr::select(!c(condition,replicate)) %>%
   mutate(across(!c(protein,complex),scale)) %>%
@@ -798,8 +791,8 @@ plot <- all.features.data %>%
         axis.title.x=element_blank())
 plot
 
-ggsave("Fig1/features_plot_Tcomplex_rep3_34hpi.png", plot, units="cm",height=8,width=8)
-ggsave("Fig1/features_plot_Tcomplex_rep3_34hpi.svg", plot, units="cm",height=8,width=8)
+ggsave("Fig/features_plot_Tcomplex_rep3_34hpi.png", plot, units="cm",height=8,width=8)
+ggsave("Fig/features_plot_Tcomplex_rep3_34hpi.svg", plot, units="cm",height=8,width=8)
 
 #No. of proteins detected
 #SFig1B inlet
@@ -1118,7 +1111,7 @@ for(ff in fastafiles) {
 # Sequence alignment of PF3D7_0626200 and ScRRP43
 
 library(msa)
-fastafiles <- paste0("Fig1/Rrp43.fasta")
+fastafiles <- paste0("Fig/Rrp43.fasta")
 for(ff in fastafiles) {
   sequences <- readAAStringSet(ff)
   PAL <- pairwiseAlignment(pattern = sequences[[1]], subject = sequences[[2]], substitutionMatrix="BLOSUM50")
@@ -1155,7 +1148,11 @@ for(ff in fastafiles) {
   
 }
 
-
+detach("package:msa", unload=TRUE)
+detach("package:Biostrings", unload=TRUE)
+detach("package:GenomeInfoDb", unload=TRUE)
+detach("package:XVector", unload=TRUE)
+detach("package:IRanges", unload=TRUE)
 
 # BELOW GENERATION OF CHARTS FOR FIG3:
 
@@ -1334,5 +1331,3 @@ for(imgf in imgfiles) {
     image_write(cropped_image, paste0(imgf,"_cropped.png"))
   }, error=function(e) {str(e)})
 }
-
-
