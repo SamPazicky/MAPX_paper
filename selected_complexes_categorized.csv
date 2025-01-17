@@ -1,0 +1,105 @@
+complex,category
+ribosome_full,Protein translation
+IF2,Protein translation
+IF3,Protein translation
+EF1,Protein translation
+MSC_M,Protein translation
+MSC_Q,Protein translation
+E2_enzyme,Protein translation
+apicoplast_ribosome,Protein translation
+SSU_UtpB,Protein translation
+proteasome,Protein degradation
+proteasome_reg,Protein degradation
+T_complex,Protein folding
+R2TP,Protein folding
+Hsp_Hop,Protein folding
+prefoldin,Protein folding
+MCM,Chromatin regulation
+histones_H2Zdimer,Chromatin regulation
+histones_H2dimer,Chromatin regulation
+condensin1,Chromatin regulation
+condensin2,Chromatin regulation
+RuvBL_trimer,Chromatin regulation
+RFC,DNA replication
+RNR,DNA replication
+RNApolII,RNA synthesis
+NCBP,RNA synthesis
+H_ACA,RNA synthesis
+spliceosome_snRNP_core,RNA splicing
+spliceosome_snRNP_U6_core,RNA splicing
+spliceosome_U2_snRNP_S3Fa,RNA splicing
+qTRT,RNA modification
+KEOPS,RNA modification
+TRM,RNA modification
+RNH,RNA modification
+exosome,RNA degradation
+SUMO_activating_enzyme,Post-translational modification
+NatA,Post-translational modification
+COPI,Protein trafficking
+COPII,Protein trafficking
+retromer,Protein trafficking
+AP1,Protein trafficking
+SRP,Protein trafficking
+PAM,Protein trafficking
+glyco_ENO_PK,Basal metabolism
+KDH,Basal metabolism
+BCKDH,Basal metabolism
+VTA,Basal metabolism
+PanK,Basal metabolism
+RespCIII,Basal metabolism
+microtubules,Structural
+basal_complex,Structural
+PROSC,Plasmodium-specific
+HDP_complex,Plasmodium-specific
+CLAG,Plasmodium-specific
+RON,Plasmodium-specific
+RAP,Plasmodium-specific
+AP3,Protein trafficking
+AP4,Protein trafficking
+CAF1,Chromatin regulation
+centrin13,Chromatin regulation
+CLAG_core,Plasmodium-specific
+CLAMP,DNA replication
+COG,Protein trafficking
+cohesin_core,Chromatin regulation
+condensin_core,Chromatin regulation
+COPII_subcomplex2,Protein trafficking
+COPII_subcomplex1,Protein trafficking
+COPI_subcomplex2,Protein trafficking
+COPI_subcomplex1,Protein trafficking
+DNApolAlphaComplex,DNA replication
+DNApolD,DNA replication
+DPH,Basal metabolism
+DSIF,RNA synthesis
+ESCRTIII_core,Protein trafficking
+ETF1,Protein translation
+FACT,RNA synthesis
+farnesyltransferase,Post-translational modification
+GAPMs,Plasmodium-specific
+glideosome_core,Plasmodium-specific
+GC,Signalling
+histones_H3H4dimer,Chromatin regulation
+IF4F,Protein translation
+mitochondrial_ribosome,Protein translation
+Mediator,RNA synthesis
+NPC,Structural
+P12P41_dimer,Plasmodium-specific
+PDH,Basal metabolism
+PCRCR,Plasmodium-specific
+PTEX_core,Plasmodium-specific
+RNApolII_core,RNA synthesis
+ARP_heterodimer,Protein translation
+SAGA_core,RNA synthesis
+SMC56_core,Chromatin regulation
+SUCA,Basal metabolism
+SufABCD,Basal metabolism
+SURGE,Plasmodium-specific
+IFIIA,RNA synthesis
+TRAPPI,Protein trafficking
+spliceosome_U5_snRNP_wo_core,RNA splicing
+SSU_UtpA,Protein translation
+SSU_UtpC,Protein translation
+clathrin,Protein trafficking
+CKII,Post-translational modification
+PTEX,Plasmodium-specific
+TIM9_10,Protein trafficking
